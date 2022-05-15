@@ -1,7 +1,8 @@
 import math
 from tensorboardX import SummaryWriter
 
-
+# tensorboard --logdir runs
+# 使用tensorboard绘图
 if __name__ == "__main__":
     writer = SummaryWriter()
 

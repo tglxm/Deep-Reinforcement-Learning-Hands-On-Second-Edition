@@ -18,6 +18,7 @@ class Net(nn.Module):
     def __init__(self, obs_size, hidden_size, n_actions):
         super(Net, self).__init__()
         self.net = nn.Sequential(
+            # 构建一个全连接层
             nn.Linear(obs_size, hidden_size),
             nn.ReLU(),
             nn.Linear(hidden_size, n_actions)
@@ -41,6 +42,7 @@ def iterate_batches(env, net, batch_size):
         obs_v = torch.FloatTensor([obs])
         act_probs_v = sm(net(obs_v))
         act_probs = act_probs_v.data.numpy()[0]
+        # 随机生成一个范围为[0,len(act_probs)]的数组，概率为act_probs
         action = np.random.choice(len(act_probs), p=act_probs)
         next_obs, reward, is_done, _ = env.step(action)
         episode_reward += reward
@@ -60,6 +62,7 @@ def iterate_batches(env, net, batch_size):
 
 def filter_batch(batch, percentile):
     rewards = list(map(lambda s: s.reward, batch))
+    # np.percentile()找到一组数的分位值
     reward_bound = np.percentile(rewards, percentile)
     reward_mean = float(np.mean(rewards))
 
@@ -78,11 +81,12 @@ def filter_batch(batch, percentile):
 
 if __name__ == "__main__":
     env = gym.make("CartPole-v0")
-    # env = gym.wrappers.Monitor(env, directory="mon", force=True)
+    env = gym.wrappers.Monitor(env, directory="mon", force=True)
     obs_size = env.observation_space.shape[0]
     n_actions = env.action_space.n
 
     net = Net(obs_size, HIDDEN_SIZE, n_actions)
+    # 构建交叉熵损失对象
     objective = nn.CrossEntropyLoss()
     optimizer = optim.Adam(params=net.parameters(), lr=0.01)
     writer = SummaryWriter(comment="-cartpole")
@@ -103,5 +107,6 @@ if __name__ == "__main__":
         writer.add_scalar("reward_mean", reward_m, iter_no)
         if reward_m > 199:
             print("Solved!")
+            print(net.parameters())
             break
     writer.close()
